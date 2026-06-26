@@ -8,7 +8,7 @@
 (function () {
 	'use strict';
 
-	var VERSION = '0.7.0';
+	var VERSION = '0.7.1';
 	var MOD_ID = 'minmax';
 
 	// ---- settings (persisted via mod save/load) -----------------------------
@@ -284,19 +284,20 @@
 	}
 
 	// ---- "next buy" readout (what auto-buy targets next + ETA) ----------------
-	// ranking is the expensive part (one CalculateGains per candidate), so cache
-	// the top pick for ~0.8s; the ETA itself recomputes cheaply from live bank.
+	// Ranking calls Game.CalculateGains() per candidate — that belongs in the LOGIC
+	// loop, never the draw loop (calling it mid-render corrupts the menu). So the
+	// expensive pass runs from onLogic (throttled ~0.8s) and just caches the top
+	// pick; the readout + ETA are then cheap, side-effect-free string building.
 	var _next = { t: 0, top: null };
-	function nextTarget() {
+	function refreshNextTarget() {
 		var now = Date.now();
-		if (now - _next.t < 800) return _next.top;
+		if (now - _next.t < 800) return;
 		_next.t = now;
 		var cps = Game.cookiesPs;
-		if (cps <= 0) { _next.top = null; return null; }
+		if (cps <= 0) { _next.top = null; return; }
 		var base = recalcPs();
 		var ranked = rankItems(cps, Math.max(0, Game.cookies - luckyReserve()), base);
 		_next.top = (ranked.length && ranked[0].pp !== Infinity) ? ranked[0] : null;
-		return _next.top;
 	}
 	function fmtTime(s) {
 		if (s <= 0) return 'now';
@@ -306,7 +307,7 @@
 		return Math.floor(s / 86400) + 'd ' + Math.floor((s % 86400) / 3600) + 'h';
 	}
 	function nextReadout() {
-		var it = nextTarget();
+		var it = _next.top;          // pure display: read the cached pick, no ranking here
 		if (!it) return 'next: <span style="opacity:.6;">nothing worth buying</span>';
 		var price = it.isBld ? it.obj.getSumPrice(it.n) : it.obj.getPrice();
 		var name = it.isBld ? (it.obj.name + (it.n > 1 ? ' ×' + it.n : '')) : (it.obj.name + ' (upgrade)');
@@ -317,13 +318,18 @@
 	// Live countdown: the menu is built once, so refresh just this line each frame.
 	function onDraw() {
 		if (Game.onMenu !== 'prefs') return;
-		var el = document.getElementById('minmaxNext');
-		if (el) el.innerHTML = nextReadout();
+		try {
+			var el = document.getElementById('minmaxNext');
+			if (el) el.innerHTML = nextReadout();   // cheap, side-effect-free
+		} catch (e) {}
 	}
 
 	// ---- scheduler -----------------------------------------------------------
 	var frame = 0;
 	function onLogic() {
+		// Keep the auto-buy readout fresh even when automation is off — runs in the
+		// logic loop so CalculateGains is called where it's safe (throttled inside).
+		if (Game.onMenu === 'prefs') { try { refreshNextTarget(); } catch (e) {} }
 		if (!settings.master) return;
 		frame++;
 		for (var i = 0; i < modules.length; i++) {

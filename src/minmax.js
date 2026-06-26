@@ -8,7 +8,7 @@
 (function () {
 	'use strict';
 
-	var VERSION = '0.2.0';
+	var VERSION = '0.3.0';
 	var MOD_ID = 'minmax';
 
 	// ---- settings (persisted via mod save/load) -----------------------------
@@ -24,6 +24,9 @@
 		lump:     { on: false },
 		fortune:  { on: false },
 		dragon:   { on: false },
+		// grimoire: auto-cast a spell at full magic. Default 'conjure baked goods'
+		// (free cookies, no backfire). Other spells can backfire — opt in knowingly.
+		grimoire: { on: false, spell: 'conjure baked goods' },
 	};
 
 	var UNIT = { none: 1, K: 1e3, M: 1e6, B: 1e9 };
@@ -155,6 +158,28 @@
 					check('autobuy.upgrades', s.upgrades, 'upgrades') +
 					check('autobuy.protect', s.protect, 'protect Lucky!/Frenzy bank') +
 					check('autobuy.patient', s.patient, s.patient ? 'patient (save for best)' : 'fast (drain affordable)'));
+			},
+		},
+
+		{
+			id: 'grimoire', label: 'Auto Grimoire', interval: 30,
+			req: 'Grimoire (Wizard Tower minigame)',
+			avail: function () {
+				var w = Game.Objects['Wizard tower'];
+				return !!(w && w.minigameLoaded);
+			},
+			tick: function () {
+				var M = Game.Objects['Wizard tower'].minigame;
+				var spell = M.spells[settings.grimoire.spell];
+				if (!spell) return;
+				// cost = max(costMin, magicM*costPercent). Only cast at full magic:
+				// maximizes value per cast and guarantees affordability.
+				var cost = Math.max(spell.costMin, M.magicM * spell.costPercent);
+				if (M.magic >= M.magicM && M.magic >= cost) M.castSpell(spell);
+			},
+			menu: function () {
+				return row('grimoire', 'Cast at full magic: ' +
+					spellSelect('grimoire.spell', settings.grimoire.spell));
 			},
 		},
 	];
@@ -298,6 +323,14 @@
 		for (var i = 0; i < opts.length; i++)
 			s += '<option value="' + opts[i] + '"' + (opts[i] === val ? ' selected' : '') + '>' +
 				(opts[i] === 'none' ? '×1' : '×' + opts[i]) + '</option>';
+		return s + '</select>';
+	}
+	// spell dropdown — only rendered when the Grimoire is loaded (module avail() gates it).
+	function spellSelect(path, val) {
+		var M = Game.Objects['Wizard tower'].minigame;
+		var s = '<select onchange="MinMax.set(\'' + path + '\',this.value);">';
+		for (var k in M.spells)
+			s += '<option value="' + k + '"' + (k === val ? ' selected' : '') + '>' + M.spells[k].name + '</option>';
 		return s + '</select>';
 	}
 	function check(path, val, label) {

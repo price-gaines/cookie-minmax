@@ -6,7 +6,7 @@ automation. Single hosted file, loaded via `Game.LoadMod`. Inspired by FrozenCoo
 
 Settings live in the game's own **Options** menu, in a "Cookie MinMax" section at the bottom.
 
-## Features (v0.2.0)
+## Features (v0.3.0)
 
 All modules default **off**; flip them on in Options. One `logic`-hook scheduler drives everything
 (no `setInterval`, no simulated DOM clicks). Modules whose prerequisites aren't unlocked in your
@@ -21,10 +21,11 @@ save are greyed out and can't be enabled.
 | **Auto Sugar Lump** | Harvests the sugar lump as soon as it's ripe. *(requires sugar lumps unlocked)* |
 | **Auto Fortune** | Clicks news-ticker fortunes (triggers the game's own handler). |
 | **Auto Pet Dragon** | Pets Krumblor while the dragon panel is open. *(requires the "Pet the dragon" heavenly upgrade)* |
+| **Auto Grimoire** | Casts a chosen spell whenever magic is full. Defaults to Conjure Baked Goods (free cookies, no backfire); other spells selectable for those who know the risks. *(requires the Grimoire — Wizard Tower minigame)* |
 
 ### Roadmap
 
-- Minigames: Garden, Stock Market, Pantheon, Grimoire
+- Minigames: Garden, Stock Market, Pantheon
 - Auto-ascend (with heavenly-upgrade spend + reincarnate)
 
 ## Install

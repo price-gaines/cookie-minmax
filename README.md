@@ -1,0 +1,62 @@
+# Cookie MinMax
+
+A native-feeling [Cookie Clicker](https://orteil.dashnet.org/cookieclicker/) mod for min/max
+automation. Single hosted file, loaded via `Game.LoadMod`. Inspired by FrozenCookies + ACABM
+(both MIT; this is a clean-room reimplementation — no copied code).
+
+Settings live in the game's own **Options** menu, in a "Cookie MinMax" section at the bottom.
+
+## Features (v0.1.0)
+
+All modules default **off**; flip them on in Options. One `logic`-hook scheduler drives everything
+(no `setInterval`, no simulated DOM clicks).
+
+| Module | What it does |
+| --- | --- |
+| **Auto-Click** | Auto-clicks the big cookie at a target rate (3-digit field × none/K/M/B). Defeats the native ~50/sec throttle and still registers clicks, the clicking stat, and click achievements. |
+| **Auto-Buy (payback)** | Buys the building/upgrade with the lowest payback period. Marginal CpS is measured by toggling each item on, recomputing `Game.cookiesPs`, and reverting — so multiplier and multi-building upgrades are valued correctly. Optional Lucky! bank protection. |
+| **Auto Golden Cookies** | Pops golden shimmers (skip wrath optional) and reindeer. |
+| **Auto Wrinklers** | Pops wrinklers, keeping shiny ones and a configurable count. |
+| **Auto Sugar Lump** | Harvests the sugar lump as soon as it's ripe. |
+| **Auto Fortune** | Clicks news-ticker fortunes (triggers the game's own handler). |
+| **Auto Pet Dragon** | Pets Krumblor while the dragon panel is open. |
+
+### Roadmap
+
+- Minigames: Garden, Stock Market, Pantheon, Grimoire
+- Auto-ascend (with heavenly-upgrade spend + reincarnate)
+- Frenzy-aware bank protection
+
+## Install
+
+Cookie Clicker must be loaded, then run **one** of these:
+
+**Bookmarklet** — make a bookmark with this as the URL, click it while playing:
+
+```
+javascript:(function(){Game.LoadMod('https://cdn.jsdelivr.net/gh/price-gaines/cookie-minmax@main/src/minmax.js')})();
+```
+
+**Console** — paste into the browser devtools console (F12):
+
+```js
+Game.LoadMod('https://cdn.jsdelivr.net/gh/price-gaines/cookie-minmax@main/src/minmax.js');
+```
+
+Then open **Options** — the "Cookie MinMax" section is at the bottom. Settings persist in your
+save (the mod stores them via the game's own save string).
+
+> jsDelivr caches `@main` for up to 24h. For a specific build use a commit hash, e.g.
+> `@b402e97/src/minmax.js`.
+
+## Architecture
+
+Add-only: the mod registers hooks and wraps `Game.UpdateMenu` with passthrough. It never replaces
+native game logic. See [`docs/superpowers/specs/2026-06-25-cookie-clicker-mod-design.md`](docs/superpowers/specs/2026-06-25-cookie-clicker-mod-design.md)
+for the design and verified runtime facts, and [`CLAUDE.md`](CLAUDE.md) for the hard rules.
+
+A console self-check is available: `MinMax._test()`.
+
+## License
+
+MIT

@@ -8,7 +8,7 @@
 (function () {
 	'use strict';
 
-	var VERSION = '0.7.1';
+	var VERSION = '0.7.2';
 	var MOD_ID = 'minmax';
 
 	// ---- settings (persisted via mod save/load) -----------------------------
@@ -409,7 +409,10 @@
 	}
 	// spell dropdown — only rendered when the Grimoire is loaded (module avail() gates it).
 	function spellSelect(path, val) {
-		var M = Game.Objects['Wizard tower'].minigame;
+		var w = Game.Objects['Wizard tower'];
+		var M = w && w.minigame;
+		// Grimoire minigame may not be loaded (other mods / not yet built); don't crash the menu.
+		if (!M || !M.spells) return '<span style="opacity:.6;">Grimoire not loaded</span>';
 		var s = '<select onchange="MinMax.set(\'' + path + '\',this.value);">';
 		for (var k in M.spells)
 			s += '<option value="' + k + '"' + (k === val ? ' selected' : '') + '>' + M.spells[k].name + '</option>';
@@ -428,7 +431,11 @@
 			'<div class="listing"><a class="option' + (settings.master ? '' : ' off') + '" ' +
 			Game.clickStr + '="MinMax.toggle(\'master\');">[' + onoff(settings.master) +
 			'] Master switch</a></div>';
-		for (var i = 0; i < modules.length; i++) html += modules[i].menu();
+		// Per-module guard: one bad menu() can never blank the whole section again.
+		for (var i = 0; i < modules.length; i++) {
+			try { html += modules[i].menu(); }
+			catch (e) { console.log('[MinMax] module menu (' + modules[i].id + '): ' + e); }
+		}
 		// Manual ascend button (not a scheduled module). Shows projected prestige gain.
 		var gain = Math.floor(Game.HowMuchPrestige(Game.cookiesReset + Game.cookiesEarned) - Game.prestige);
 		html += '<div class="listing"><a class="option" ' + Game.clickStr +

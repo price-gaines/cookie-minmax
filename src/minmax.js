@@ -8,7 +8,7 @@
 (function () {
 	'use strict';
 
-	var VERSION = '0.7.4';
+	var VERSION = '0.7.5';
 	var MOD_ID = 'minmax';
 
 	// ---- settings (persisted via mod save/load) -----------------------------
@@ -427,7 +427,7 @@
 		var menu = document.getElementById('menu');
 		if (!menu || document.getElementById('minmaxMenu')) return;
 		var html = '<div class="subsection" id="minmaxMenu"><div class="title">' +
-			'Cookie MinMax v' + VERSION + '</div>' +
+			'IdlerIHardlyKnowHer v' + VERSION + '</div>' +
 			'<div class="listing"><a class="option' + (settings.master ? '' : ' off') + '" ' +
 			Game.clickStr + '="MinMax.toggle(\'master\');">[' + onoff(settings.master) +
 			'] Master switch</a></div>';
@@ -493,7 +493,7 @@
 
 	// ---- register ------------------------------------------------------------
 	Game.registerMod(MOD_ID, {
-		name: 'Cookie MinMax',
+		name: 'IdlerIHardlyKnowHer',
 		init: function () {
 			wrapMenu();
 			Game.registerHook('logic', onLogic);

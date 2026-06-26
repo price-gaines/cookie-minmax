@@ -6,26 +6,26 @@ automation. Single hosted file, loaded via `Game.LoadMod`. Inspired by FrozenCoo
 
 Settings live in the game's own **Options** menu, in a "Cookie MinMax" section at the bottom.
 
-## Features (v0.1.0)
+## Features (v0.2.0)
 
 All modules default **off**; flip them on in Options. One `logic`-hook scheduler drives everything
-(no `setInterval`, no simulated DOM clicks).
+(no `setInterval`, no simulated DOM clicks). Modules whose prerequisites aren't unlocked in your
+save are greyed out and can't be enabled.
 
 | Module | What it does |
 | --- | --- |
 | **Auto-Click** | Auto-clicks the big cookie at a target rate (3-digit field × none/K/M/B). Defeats the native ~50/sec throttle and still registers clicks, the clicking stat, and click achievements. |
-| **Auto-Buy (payback)** | Buys the building/upgrade with the lowest payback period. Marginal CpS is measured by toggling each item on, recomputing `Game.cookiesPs`, and reverting — so multiplier and multi-building upgrades are valued correctly. Optional Lucky! bank protection. |
+| **Auto-Buy (payback)** | Buys by lowest payback period. Marginal CpS is measured by toggling each item on, recomputing `Game.cookiesPs`, and reverting — so multiplier and multi-building upgrades are valued correctly. Granular toggles: buildings, upgrades, Frenzy-aware Lucky! bank protection, and fast (drain all affordable each tick) vs patient (save for the single best). |
 | **Auto Golden Cookies** | Pops golden shimmers (skip wrath optional) and reindeer. |
 | **Auto Wrinklers** | Pops wrinklers, keeping shiny ones and a configurable count. |
-| **Auto Sugar Lump** | Harvests the sugar lump as soon as it's ripe. |
+| **Auto Sugar Lump** | Harvests the sugar lump as soon as it's ripe. *(requires sugar lumps unlocked)* |
 | **Auto Fortune** | Clicks news-ticker fortunes (triggers the game's own handler). |
-| **Auto Pet Dragon** | Pets Krumblor while the dragon panel is open. |
+| **Auto Pet Dragon** | Pets Krumblor while the dragon panel is open. *(requires the "Pet the dragon" heavenly upgrade)* |
 
 ### Roadmap
 
 - Minigames: Garden, Stock Market, Pantheon, Grimoire
 - Auto-ascend (with heavenly-upgrade spend + reincarnate)
-- Frenzy-aware bank protection
 
 ## Install
 

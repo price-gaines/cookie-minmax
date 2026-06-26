@@ -8,7 +8,7 @@
 (function () {
 	'use strict';
 
-	var VERSION = '0.7.6';
+	var VERSION = '0.7.7';
 	var MOD_ID = 'IIHKH';
 
 	// ---- settings (persisted via mod save/load) -----------------------------
@@ -426,7 +426,8 @@
 	function buildMenu() {
 		var menu = document.getElementById('menu');
 		if (!menu || document.getElementById('minmaxMenu')) return;
-		var html = '<div class="subsection" id="minmaxMenu"><div class="title">' +
+		var html = '<div class="subsection" id="minmaxMenu" style="padding-top:0;margin-top:0;padding-bottom:48px;">' +
+			'<div class="title" style="padding-top:0;margin-top:0;">' +
 			'IdlerIHardlyKnowHer v' + VERSION + '</div>' +
 			'<div class="listing"><a class="option' + (settings.master ? '' : ' off') + '" ' +
 			Game.clickStr + '="MinMax.toggle(\'master\');">[' + onoff(settings.master) +

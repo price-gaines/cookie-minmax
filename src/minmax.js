@@ -8,8 +8,8 @@
 (function () {
 	'use strict';
 
-	var VERSION = '0.7.5';
-	var MOD_ID = 'minmax';
+	var VERSION = '0.7.6';
+	var MOD_ID = 'IIHKH';
 
 	// ---- settings (persisted via mod save/load) -----------------------------
 	// Defaults. load() deep-merges the saved object over these.

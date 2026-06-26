@@ -6,7 +6,7 @@ automation. Single hosted file, loaded via `Game.LoadMod`. Inspired by FrozenCoo
 
 Settings live in the game's own **Options** menu, in a "Cookie MinMax" section at the bottom.
 
-## Features (v0.3.0)
+## Features (v0.4.0)
 
 All modules default **off**; flip them on in Options. One `logic`-hook scheduler drives everything
 (no `setInterval`, no simulated DOM clicks). Modules whose prerequisites aren't unlocked in your
@@ -22,11 +22,12 @@ save are greyed out and can't be enabled.
 | **Auto Fortune** | Clicks news-ticker fortunes (triggers the game's own handler). |
 | **Auto Pet Dragon** | Pets Krumblor while the dragon panel is open. *(requires the "Pet the dragon" heavenly upgrade)* |
 | **Auto Grimoire** | Casts a chosen spell whenever magic is full. Defaults to Conjure Baked Goods (free cookies, no backfire); other spells selectable for those who know the risks. *(requires the Grimoire — Wizard Tower minigame)* |
+| **Auto Garden** | Harvests mature plants (native `harvestAll`), leaving immortals and still-growing tiles — prevents decay-death losses. Leave it off while deliberately cross-breeding. *(requires the Garden — Farm minigame)* |
+| **Ascend Now** *(manual)* | A button at the bottom of the section that triggers the game's own ascension screen, showing projected prestige gain. Never fires automatically — you confirm the reset in-game. |
 
 ### Roadmap
 
-- Minigames: Garden, Stock Market, Pantheon
-- Auto-ascend (with heavenly-upgrade spend + reincarnate)
+- Minigames: Stock Market, Pantheon
 
 ## Install
 

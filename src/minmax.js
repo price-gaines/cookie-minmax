@@ -8,7 +8,7 @@
 (function () {
 	'use strict';
 
-	var VERSION = '0.3.0';
+	var VERSION = '0.4.0';
 	var MOD_ID = 'minmax';
 
 	// ---- settings (persisted via mod save/load) -----------------------------
@@ -27,6 +27,7 @@
 		// grimoire: auto-cast a spell at full magic. Default 'conjure baked goods'
 		// (free cookies, no backfire). Other spells can backfire — opt in knowingly.
 		grimoire: { on: false, spell: 'conjure baked goods' },
+		garden:   { on: false },
 	};
 
 	var UNIT = { none: 1, K: 1e3, M: 1e6, B: 1e9 };
@@ -182,6 +183,22 @@
 					spellSelect('grimoire.spell', settings.grimoire.spell));
 			},
 		},
+
+		{
+			id: 'garden', label: 'Auto Garden', interval: 30,
+			req: 'Garden (Farm minigame)',
+			avail: function () {
+				var f = Game.Objects['Farm'];
+				return !!(f && f.minigameLoaded);
+			},
+			tick: function () {
+				// Native harvestAll(type, mature, mortal): 0=all types, mature-only,
+				// mortal-only -> harvests ripe non-immortal plants, leaves immortals
+				// and still-growing tiles. Add-only; prevents decay-death losses.
+				Game.Objects['Farm'].minigame.harvestAll(0, 1, 1);
+			},
+			menu: function () { return row('garden', 'Harvest mature plants (keeps immortals)'); },
+		},
 	];
 
 	// ---- payback engine ------------------------------------------------------
@@ -294,6 +311,10 @@
 				(typeof cur === 'number') ? (parseFloat(val) || 0) : val;
 			Game.UpdateMenu();
 		},
+		// Manual-only ascension. NEVER scheduled — fires solely from the menu
+		// button. Game.Ascend() pops the game's own confirm screen; the user
+		// commits the destructive reset there, not us.
+		ascend: function () { if (typeof Game.Ascend === 'function') Game.Ascend(); },
 		_test: selfTest,
 	};
 
@@ -347,6 +368,11 @@
 			Game.clickStr + '="MinMax.toggle(\'master\');">[' + onoff(settings.master) +
 			'] Master switch</a></div>';
 		for (var i = 0; i < modules.length; i++) html += modules[i].menu();
+		// Manual ascend button (not a scheduled module). Shows projected prestige gain.
+		var gain = Math.floor(Game.HowMuchPrestige(Game.cookiesReset + Game.cookiesEarned) - Game.prestige);
+		html += '<div class="listing"><a class="option" ' + Game.clickStr +
+			'="MinMax.ascend();">[ASCEND NOW]</a> <span style="opacity:.7;">manual reset — +' +
+			Beautify(Math.max(0, gain)) + ' prestige (game asks you to confirm)</span></div>';
 		html += '</div>';
 		menu.insertAdjacentHTML('beforeend', html);
 	}

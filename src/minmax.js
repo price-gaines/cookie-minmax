@@ -8,7 +8,7 @@
 (function () {
 	'use strict';
 
-	var VERSION = '0.5.0';
+	var VERSION = '0.6.0';
 	var MOD_ID = 'minmax';
 
 	// ---- settings (persisted via mod save/load) -----------------------------
@@ -18,7 +18,7 @@
 		click:    { on: false, value: 1, unit: 'none' },   // value 1-999 * unit
 		// autobuy: patient=false drains every affordable item in payback order each tick
 		// (fast); patient=true saves up for the single best-payback item (FrozenCookies style).
-		autobuy:  { on: false, protect: true, buildings: true, upgrades: true, patient: false, maxBuys: 200, rate: 2 },
+		autobuy:  { on: false, protect: true, buildings: true, upgrades: true, patient: false, maxBuys: 200, rate: 2, bulk: 1 },
 		golden:   { on: false, popWrath: false, popReindeer: true },
 		wrink:    { on: false, keepShiny: true, keepCount: 0 },
 		lump:     { on: false },
@@ -158,7 +158,7 @@
 			menu: function () {
 				var s = settings.autobuy;
 				return row('autobuy', 'Buy by payback period' +
-					check('autobuy.buildings', s.buildings, 'buildings') +
+					check('autobuy.buildings', s.buildings, 'buildings') + bulkSelect('autobuy.bulk', s.bulk) +
 					check('autobuy.upgrades', s.upgrades, 'upgrades') +
 					check('autobuy.protect', s.protect, 'protect Lucky!/Frenzy bank') +
 					check('autobuy.patient', s.patient, s.patient ? 'patient (save for best)' : 'fast (drain affordable)') +
@@ -211,9 +211,9 @@
 
 	function recalcPs() { Game.CalculateGains(); return Game.cookiesPs; }
 
-	function marginalBuilding(obj, base) {
-		obj.amount++; var p = recalcPs();
-		obj.amount--; recalcPs();
+	function marginalBuilding(obj, base, n) {
+		obj.amount += n; var p = recalcPs();
+		obj.amount -= n; recalcPs();
 		return p - base;
 	}
 	function marginalUpgrade(u, base) {
@@ -241,16 +241,17 @@
 
 	// Rank every candidate once (the expensive marginal-cps pass), then drain cheaply.
 	function rankItems(cps, usable, base) {
-		var items = [], i, s = settings.autobuy;
+		var items = [], i, s = settings.autobuy, n = s.bulk || 1;
+		// Buildings: evaluate + price the chosen bulk size (1/10/100) as a unit.
 		if (s.buildings) for (i = 0; i < Game.ObjectsById.length; i++) {
 			var o = Game.ObjectsById[i]; if (!o || o.locked) continue;
-			var d = marginalBuilding(o, base);
-			items.push({ pp: pp(o.getPrice(), d, cps, usable), obj: o, isBld: true });
+			var d = marginalBuilding(o, base, n);
+			items.push({ pp: pp(o.getSumPrice(n), d, cps, usable), obj: o, isBld: true, n: n });
 		}
 		if (s.upgrades) for (i = 0; i < Game.UpgradesInStore.length; i++) {
 			var u = Game.UpgradesInStore[i]; if (!u || SKIP_POOLS[u.pool]) continue;
 			var du = marginalUpgrade(u, base);
-			items.push({ pp: pp(u.getPrice(), du, cps, usable), obj: u, isBld: false });
+			items.push({ pp: pp(u.getPrice(), du, cps, usable), obj: u, isBld: false, n: 1 });
 		}
 		items.sort(function (a, b) { return a.pp - b.pp; });
 		return items;
@@ -270,10 +271,12 @@
 		for (var i = 0; i < ranked.length && bought < max; i++) {
 			var it = ranked[i];
 			if (it.pp === Infinity) break; // no positive-CpS items left
-			// Re-fetch price each buy: building prices climb as we buy them.
-			while (bought < max && it.obj.getPrice() <= Game.cookies - reserve) {
-				it.obj.buy(1); bought++;
-				if (!it.isBld) break; // upgrades are one-shot
+			// Re-price each pass: building prices climb as we buy. Buildings buy in
+			// the chosen bulk size (getSumPrice(n) -> buy(n)); upgrades are one-shot.
+			while (bought < max &&
+				(it.isBld ? it.obj.getSumPrice(it.n) : it.obj.getPrice()) <= Game.cookies - reserve) {
+				it.obj.buy(it.isBld ? it.n : 1); bought += it.isBld ? it.n : 1;
+				if (!it.isBld) break;
 			}
 			if (patient) break;                       // saved for the best; stop
 		}
@@ -349,6 +352,14 @@
 		for (var i = 0; i < opts.length; i++)
 			s += '<option value="' + opts[i] + '"' + (opts[i] === val ? ' selected' : '') + '>' +
 				(opts[i] === 'none' ? '×1' : '×' + opts[i]) + '</option>';
+		return s + '</select>';
+	}
+	// building bulk-size dropdown: 1x / 10x / 100x (value is numeric).
+	function bulkSelect(path, val) {
+		var opts = [1, 10, 100], s = '<select onchange="MinMax.set(\'' + path + '\',this.value);">';
+		for (var i = 0; i < opts.length; i++)
+			s += '<option value="' + opts[i] + '"' + (opts[i] === val ? ' selected' : '') + '>' +
+				opts[i] + '×</option>';
 		return s + '</select>';
 	}
 	// spell dropdown — only rendered when the Grimoire is loaded (module avail() gates it).

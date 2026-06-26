@@ -8,7 +8,7 @@
 (function () {
 	'use strict';
 
-	var VERSION = '0.7.3';
+	var VERSION = '0.7.4';
 	var MOD_ID = 'minmax';
 
 	// ---- settings (persisted via mod save/load) -----------------------------
@@ -30,7 +30,7 @@
 		garden:   { on: false },
 	};
 
-	var UNIT = { none: 1, K: 1e3, M: 1e6, B: 1e9 };
+	var UNIT = { none: 1, K: 1e3, M: 1e6, B: 1e9, T: 1e12 };
 
 	function targetCps() {
 		var v = Math.max(0, Math.min(999, parseInt(settings.click.value) || 0));
@@ -393,7 +393,7 @@
 			'onkeyup="if(event.key===\'Enter\')this.blur();"/>';
 	}
 	function unitSelect(path, val) {
-		var opts = ['none', 'K', 'M', 'B'], s = '<select onchange="MinMax.set(\'' + path + '\',this.value);">';
+		var opts = ['none', 'K', 'M', 'B', 'T'], s = '<select onchange="MinMax.set(\'' + path + '\',this.value);">';
 		for (var i = 0; i < opts.length; i++)
 			s += '<option value="' + opts[i] + '"' + (opts[i] === val ? ' selected' : '') + '>' +
 				(opts[i] === 'none' ? '×1' : '×' + opts[i]) + '</option>';

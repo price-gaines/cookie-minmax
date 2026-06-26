@@ -8,7 +8,7 @@
 (function () {
 	'use strict';
 
-	var VERSION = '0.4.0';
+	var VERSION = '0.5.0';
 	var MOD_ID = 'minmax';
 
 	// ---- settings (persisted via mod save/load) -----------------------------
@@ -18,7 +18,7 @@
 		click:    { on: false, value: 1, unit: 'none' },   // value 1-999 * unit
 		// autobuy: patient=false drains every affordable item in payback order each tick
 		// (fast); patient=true saves up for the single best-payback item (FrozenCookies style).
-		autobuy:  { on: false, protect: true, buildings: true, upgrades: true, patient: false, maxBuys: 200 },
+		autobuy:  { on: false, protect: true, buildings: true, upgrades: true, patient: false, maxBuys: 200, rate: 2 },
 		golden:   { on: false, popWrath: false, popReindeer: true },
 		wrink:    { on: false, keepShiny: true, keepCount: 0 },
 		lump:     { on: false },
@@ -150,7 +150,10 @@
 		},
 
 		{
-			id: 'autobuy', label: 'Auto-Buy (payback)', interval: 15,
+			id: 'autobuy', label: 'Auto-Buy (payback)',
+			// User-adjustable speed: rate = evaluations/sec. Each eval runs the
+			// expensive marginal-CpS pass, so higher = more reactive, more CPU.
+			interval: function () { return Math.max(1, Math.round(Game.fps / (settings.autobuy.rate || 2))); },
 			tick: function () { autoBuyTick(); },
 			menu: function () {
 				var s = settings.autobuy;
@@ -158,7 +161,8 @@
 					check('autobuy.buildings', s.buildings, 'buildings') +
 					check('autobuy.upgrades', s.upgrades, 'upgrades') +
 					check('autobuy.protect', s.protect, 'protect Lucky!/Frenzy bank') +
-					check('autobuy.patient', s.patient, s.patient ? 'patient (save for best)' : 'fast (drain affordable)'));
+					check('autobuy.patient', s.patient, s.patient ? 'patient (save for best)' : 'fast (drain affordable)') +
+					' speed ' + numField('autobuy.rate', s.rate, 2) + '/sec');
 			},
 		},
 
@@ -284,7 +288,8 @@
 			var m = modules[i];
 			if (!settings[m.id] || !settings[m.id].on) continue;
 			if (m.avail && !m.avail()) continue; // prerequisite not unlocked in this save
-			if (frame % m.interval !== 0) continue;
+			var iv = (typeof m.interval === 'function') ? m.interval() : m.interval; // dynamic (autobuy speed)
+			if (frame % (iv < 1 ? 1 : iv) !== 0) continue;
 			try { m.tick(); } catch (e) { console.error('[MinMax] ' + m.id + ' tick:', e); }
 		}
 	}

@@ -8,7 +8,7 @@
 (function () {
 	'use strict';
 
-	var VERSION = '0.6.0';
+	var VERSION = '0.7.0';
 	var MOD_ID = 'minmax';
 
 	// ---- settings (persisted via mod save/load) -----------------------------
@@ -162,7 +162,8 @@
 					check('autobuy.upgrades', s.upgrades, 'upgrades') +
 					check('autobuy.protect', s.protect, 'protect Lucky!/Frenzy bank') +
 					check('autobuy.patient', s.patient, s.patient ? 'patient (save for best)' : 'fast (drain affordable)') +
-					' speed ' + numField('autobuy.rate', s.rate, 2) + '/sec');
+					' speed ' + numField('autobuy.rate', s.rate, 2) + '/sec') +
+					'<div class="listing" style="padding-left:18px;opacity:.85;" id="minmaxNext">' + nextReadout() + '</div>';
 			},
 		},
 
@@ -190,7 +191,7 @@
 
 		{
 			id: 'garden', label: 'Auto Garden', interval: 30,
-			req: 'Garden (Farm minigame)',
+			req: 'Garden',
 			avail: function () {
 				var f = Game.Objects['Farm'];
 				return !!(f && f.minigameLoaded);
@@ -280,6 +281,44 @@
 			}
 			if (patient) break;                       // saved for the best; stop
 		}
+	}
+
+	// ---- "next buy" readout (what auto-buy targets next + ETA) ----------------
+	// ranking is the expensive part (one CalculateGains per candidate), so cache
+	// the top pick for ~0.8s; the ETA itself recomputes cheaply from live bank.
+	var _next = { t: 0, top: null };
+	function nextTarget() {
+		var now = Date.now();
+		if (now - _next.t < 800) return _next.top;
+		_next.t = now;
+		var cps = Game.cookiesPs;
+		if (cps <= 0) { _next.top = null; return null; }
+		var base = recalcPs();
+		var ranked = rankItems(cps, Math.max(0, Game.cookies - luckyReserve()), base);
+		_next.top = (ranked.length && ranked[0].pp !== Infinity) ? ranked[0] : null;
+		return _next.top;
+	}
+	function fmtTime(s) {
+		if (s <= 0) return 'now';
+		if (s < 60) return Math.ceil(s) + 's';
+		if (s < 3600) return Math.floor(s / 60) + 'm ' + Math.ceil(s % 60) + 's';
+		if (s < 86400) return Math.floor(s / 3600) + 'h ' + Math.floor((s % 3600) / 60) + 'm';
+		return Math.floor(s / 86400) + 'd ' + Math.floor((s % 86400) / 3600) + 'h';
+	}
+	function nextReadout() {
+		var it = nextTarget();
+		if (!it) return 'next: <span style="opacity:.6;">nothing worth buying</span>';
+		var price = it.isBld ? it.obj.getSumPrice(it.n) : it.obj.getPrice();
+		var name = it.isBld ? (it.obj.name + (it.n > 1 ? ' ×' + it.n : '')) : (it.obj.name + ' (upgrade)');
+		var need = price + luckyReserve() - Game.cookies;
+		var eta = (Game.cookiesPs > 0) ? fmtTime(need / Game.cookiesPs) : '—';
+		return 'next: <b>' + name + '</b> — ' + Beautify(price) + ' in ' + eta;
+	}
+	// Live countdown: the menu is built once, so refresh just this line each frame.
+	function onDraw() {
+		if (Game.onMenu !== 'prefs') return;
+		var el = document.getElementById('minmaxNext');
+		if (el) el.innerHTML = nextReadout();
 	}
 
 	// ---- scheduler -----------------------------------------------------------
@@ -434,6 +473,7 @@
 		settings.click.value = sv; settings.click.unit = su;
 		var pr = settings.autobuy.protect; settings.autobuy.protect = false;
 		assert(luckyReserve() === 0, 'protect off -> no reserve'); settings.autobuy.protect = pr;
+		assert(fmtTime(0) === 'now' && fmtTime(45) === '45s' && fmtTime(90).indexOf('1m') === 0, 'fmtTime');
 		console.log('[MinMax] selfTest OK');
 		return true;
 	}
@@ -444,6 +484,7 @@
 		init: function () {
 			wrapMenu();
 			Game.registerHook('logic', onLogic);
+			Game.registerHook('draw', onDraw);
 			selfTest();
 			console.log('[MinMax] v' + VERSION + ' loaded.');
 		},

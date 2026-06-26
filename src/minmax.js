@@ -8,7 +8,7 @@
 (function () {
 	'use strict';
 
-	var VERSION = '0.7.2';
+	var VERSION = '0.7.3';
 	var MOD_ID = 'minmax';
 
 	// ---- settings (persisted via mod save/load) -----------------------------
@@ -169,7 +169,7 @@
 
 		{
 			id: 'grimoire', label: 'Auto Grimoire', interval: 30,
-			req: 'Grimoire (Wizard Tower minigame)',
+			req: 'Wizard Tower Lvl 1',
 			avail: function () {
 				var w = Game.Objects['Wizard tower'];
 				return !!(w && w.minigameLoaded);
@@ -191,7 +191,7 @@
 
 		{
 			id: 'garden', label: 'Auto Garden', interval: 30,
-			req: 'Garden',
+			req: 'Farm Lvl 1',
 			avail: function () {
 				var f = Game.Objects['Farm'];
 				return !!(f && f.minigameLoaded);

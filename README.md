@@ -21,8 +21,8 @@ save are greyed out and can't be enabled.
 | **Auto Sugar Lump** | Harvests the sugar lump as soon as it's ripe. *(requires sugar lumps unlocked)* |
 | **Auto Fortune** | Clicks news-ticker fortunes (triggers the game's own handler). |
 | **Auto Pet Dragon** | Pets Krumblor while the dragon panel is open. *(requires the "Pet the dragon" heavenly upgrade)* |
-| **Auto Grimoire** | Casts a chosen spell whenever magic is full. Defaults to Conjure Baked Goods (free cookies, no backfire); other spells selectable for those who know the risks. *(requires the Grimoire — Wizard Tower minigame)* |
-| **Auto Garden** | Harvests mature plants (native `harvestAll`), leaving immortals and still-growing tiles — prevents decay-death losses. Leave it off while deliberately cross-breeding. *(requires the Garden — Farm minigame)* |
+| **Auto Grimoire** | Casts a chosen spell whenever magic is full. Defaults to Conjure Baked Goods (free cookies, no backfire); other spells selectable for those who know the risks. *(requires Wizard Tower Lvl 1)* |
+| **Auto Garden** | Harvests mature plants (native `harvestAll`), leaving immortals and still-growing tiles — prevents decay-death losses. Leave it off while deliberately cross-breeding. *(requires Farm Lvl 1)* |
 | **Ascend Now** *(manual)* | A button at the bottom of the section that triggers the game's own ascension screen, showing projected prestige gain. Never fires automatically — you confirm the reset in-game. |
 
 ### Roadmap

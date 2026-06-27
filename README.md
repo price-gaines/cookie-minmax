@@ -6,7 +6,7 @@ automation. Single hosted file, loaded via `Game.LoadMod`. Inspired by FrozenCoo
 
 Settings live in the game's own **Options** menu, in a "Cookie MinMax" section at the bottom.
 
-## Features (v0.8.0)
+## Features (v0.9.0)
 
 All modules default **off**; flip them on in Options. One `logic`-hook scheduler drives everything
 (no `setInterval`, no simulated DOM clicks). Modules whose prerequisites aren't unlocked in your
@@ -23,7 +23,7 @@ save are greyed out and can't be enabled.
 | **Auto Pet Dragon** | Pets Krumblor while the dragon panel is open. *(requires the "Pet the dragon" heavenly upgrade)* |
 | **Auto Grimoire** | Casts a chosen spell whenever magic is full. Defaults to Conjure Baked Goods (free cookies, no backfire); other spells selectable for those who know the risks. *(requires Wizard Tower Lvl 1)* |
 | **Auto Garden** | Harvests mature plants (native `harvestAll`), leaving immortals and still-growing tiles — prevents decay-death losses. Leave it off while deliberately cross-breeding. *(requires Farm Lvl 1)* |
-| **Auto-Ascend @ exactly 1 trillion** | One-shot achievement grab for *When the cookies ascend just right* (ascend with exactly 1T cookies — impossible to hit by hand since CpS overshoots). Sets the bank to exactly 1 trillion the instant before committing the reset, then disarms itself. Defaults off; this one performs a **real ascension**. |
+| **Auto Lucky Upgrades** | Grabs the three "Lucky" heavenly upgrades (*Lucky digit / number / payout*) — which unlock when your prestige level's digits contain ≥1 / ≥2 / ≥4 sevens — the moment you're eligible and can afford the heavenly chips. No ascension or reset required (the buy works in normal play; the mod just enforces the 7-count so it only takes what's legitimately available). One-shot: disarms after a grab. |
 | **Ascend Now** *(manual)* | A button at the bottom of the section that triggers the game's own ascension screen, showing projected prestige gain. Never fires automatically — you confirm the reset in-game. |
 
 ### Roadmap

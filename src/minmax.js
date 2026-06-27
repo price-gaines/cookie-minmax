@@ -8,7 +8,7 @@
 (function () {
 	'use strict';
 
-	var VERSION = '0.8.0';
+	var VERSION = '0.9.0';
 	var MOD_ID = 'IIHKH';
 
 	// ---- settings (persisted via mod save/load) -----------------------------
@@ -32,6 +32,15 @@
 	};
 
 	var UNIT = { none: 1, K: 1e3, M: 1e6, B: 1e9, T: 1e12 };
+
+	// The three "Lucky" heavenly upgrades unlock when the prestige LEVEL's decimal
+	// contains enough 7s (verified live via each upgrade's showIf): >=1 / >=2 / >=4.
+	var LUCKY = [
+		{ name: 'Lucky digit', sevens: 1 },
+		{ name: 'Lucky number', sevens: 2 },
+		{ name: 'Lucky payout', sevens: 4 },
+	];
+	function sevenCount() { return ('' + Math.floor(Game.prestige || 0)).split('7').length - 1; }
 
 	function targetCps() {
 		var v = Math.max(0, Math.min(999, parseInt(settings.click.value) || 0));
@@ -207,30 +216,35 @@
 		},
 
 		{
-			// One-shot achievement grab: "When the cookies ascend just right" fires in
-			// Game.Reset when Math.round(Game.cookies)==1e12. CpS jumps the bank in big
-			// steps so you can never land there naturally — so we set the bank to exactly
-			// 1 trillion the instant before committing the reset (bank zeroes anyway, and
-			// prestige comes from lifetime baked, not current bank, so it's purely the win).
-			id: 'ascendlucky', label: 'Auto-Ascend @ exactly 1 trillion', interval: 30,
-			req: 'the "ascend just right" achievement (still unearned)',
+			// Auto-grab the Lucky heavenly upgrades. They're buyable whenever the prestige
+			// LEVEL's decimal has enough 7s (>=1/>=2/>=4) and you can afford the chips.
+			// buy() does NOT itself check the 7-count (showIf only gates the UI) and works
+			// in normal play — no ascend screen, no reset needed — so we enforce the 7-count
+			// ourselves and only ever grab what a player could legitimately buy.
+			id: 'ascendlucky', label: 'Auto Lucky Upgrades', interval: 60,
+			req: 'an unowned Lucky upgrade',
 			avail: function () {
-				var a = Game.Achievements['When the cookies ascend just right'];
-				return !!(a && !a.won); // greys out once earned -> also stops it ever looping
+				return LUCKY.some(function (t) {
+					var u = Game.Upgrades[t.name];
+					return u && !u.bought;
+				});
 			},
 			tick: function () {
-				if (Game.OnAscend) return;             // already mid-ascension
-				if (typeof Game.Ascend !== 'function' || typeof Game.Reincarnate !== 'function') return;
-				settings.ascendlucky.on = false;       // one-shot: disarm BEFORE the (re-entrant) commit
-				Game.Ascend(1);                        // open ascend screen, bypass prompt
-				if (!Game.OnAscend) return;            // couldn't ascend (nothing to reset yet)
-				Game.cookies = 1e12;                   // exact lucky number for Reset's Math.round check
-				Game.Reincarnate(1);                   // commit the reset, bypass confirm -> grants the win
+				if (!Game.Upgrades || typeof Game.heavenlyChips !== 'number') return;
+				var sevens = sevenCount(), grabbed = false;
+				for (var i = 0; i < LUCKY.length; i++) {
+					var t = LUCKY[i], u = Game.Upgrades[t.name];
+					if (u && !u.bought && sevens >= t.sevens && Game.heavenlyChips >= u.basePrice) {
+						u.buy(1); grabbed = true;
+					}
+				}
+				if (grabbed) settings.ascendlucky.on = false; // one-shot: disarm after a grab
 			},
 			menu: function () {
 				return row('ascendlucky',
-					'<span style="opacity:.85;">sets bank to exactly 1 trillion, then ascends — ' +
-					'<b>a real reset</b>, fires once then disarms</span>');
+					'<span style="opacity:.85;">buys Lucky digit/number/payout once your prestige ' +
+					'level has enough 7s (' + sevenCount() + ' now) and you can afford the chips — ' +
+					'<b>no reset</b>, fires once then disarms</span>');
 			},
 		},
 	];
@@ -519,6 +533,10 @@
 		assert(fmtTime(0) === 'now' && fmtTime(45) === '45s' && fmtTime(90).indexOf('1m') === 0, 'fmtTime');
 		var al = null; for (var i = 0; i < modules.length; i++) if (modules[i].id === 'ascendlucky') al = modules[i];
 		assert(al && typeof al.tick === 'function' && typeof al.avail === 'function', 'ascendlucky module present');
+		var sp = Game.prestige;
+		Game.prestige = 70707; assert(sevenCount() === 3, 'sevenCount counts all 7s');
+		Game.prestige = 123; assert(sevenCount() === 0, 'sevenCount no 7s');
+		Game.prestige = sp;
 		console.log('[MinMax] selfTest OK');
 		return true;
 	}

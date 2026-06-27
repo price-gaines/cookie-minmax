@@ -8,7 +8,7 @@
 (function () {
 	'use strict';
 
-	var VERSION = '0.9.0';
+	var VERSION = '0.10.0';
 	var MOD_ID = 'IIHKH';
 
 	// ---- settings (persisted via mod save/load) -----------------------------
@@ -28,7 +28,7 @@
 		// (free cookies, no backfire). Other spells can backfire — opt in knowingly.
 		grimoire: { on: false, spell: 'conjure baked goods' },
 		garden:   { on: false },
-		ascendlucky: { on: false },
+		ascendlucky: { on: false, steer: false },
 	};
 
 	var UNIT = { none: 1, K: 1e3, M: 1e6, B: 1e9, T: 1e12 };
@@ -40,7 +40,22 @@
 		{ name: 'Lucky number', sevens: 2 },
 		{ name: 'Lucky payout', sevens: 4 },
 	];
-	function sevenCount() { return ('' + Math.floor(Game.prestige || 0)).split('7').length - 1; }
+	function sevensIn(n) { return ('' + Math.floor(n || 0)).split('7').length - 1; }
+	function sevenCount() { return sevensIn(Game.prestige); }
+	// Projected prestige level if you ascended right now (committed + this run's earnings).
+	function projectedPrestige() {
+		if (typeof Game.HowMuchPrestige !== 'function') return Math.floor(Game.prestige || 0);
+		return Math.floor(Game.HowMuchPrestige((Game.cookiesReset || 0) + (Game.cookiesEarned || 0)));
+	}
+	// Buy every Lucky upgrade whose 7-requirement is met and chips can cover it. Returns true if any bought.
+	function grabLucky(sevens) {
+		var grabbed = false;
+		for (var i = 0; i < LUCKY.length; i++) {
+			var t = LUCKY[i], u = Game.Upgrades[t.name];
+			if (u && !u.bought && sevens >= t.sevens && Game.heavenlyChips >= u.basePrice) { u.buy(1); grabbed = true; }
+		}
+		return grabbed;
+	}
 
 	function targetCps() {
 		var v = Math.max(0, Math.min(999, parseInt(settings.click.value) || 0));
@@ -231,20 +246,35 @@
 			},
 			tick: function () {
 				if (!Game.Upgrades || typeof Game.heavenlyChips !== 'number') return;
-				var sevens = sevenCount(), grabbed = false;
-				for (var i = 0; i < LUCKY.length; i++) {
-					var t = LUCKY[i], u = Game.Upgrades[t.name];
-					if (u && !u.bought && sevens >= t.sevens && Game.heavenlyChips >= u.basePrice) {
-						u.buy(1); grabbed = true;
-					}
-				}
-				if (grabbed) settings.ascendlucky.on = false; // one-shot: disarm after a grab
+				// 1) Non-destructive: grab anything legitimately buyable right now.
+				if (grabLucky(sevenCount())) { settings.ascendlucky.on = false; return; }
+				// 2) Steering (opt-in, destructive): ascend the instant the projected level
+				//    would gain a 7 that newly unlocks an unbought, affordable Lucky upgrade.
+				if (!settings.ascendlucky.steer || Game.OnAscend) return;
+				var cur = Math.floor(Game.prestige || 0), target = projectedPrestige();
+				if (target <= cur) return;
+				var tSevens = sevensIn(target), curSevens = sevensIn(cur);
+				var postChips = Game.heavenlyChips + (target - cur); // chips gained on ascend
+				var willUnlock = LUCKY.some(function (t) {
+					var u = Game.Upgrades[t.name];
+					return u && !u.bought && curSevens < t.sevens && tSevens >= t.sevens && postChips >= u.basePrice;
+				});
+				if (!willUnlock) return;
+				settings.ascendlucky.steer = false; settings.ascendlucky.on = false; // disarm before the reset
+				Game.Ascend(1);
+				if (Game.OnAscend) Game.Reincarnate(1); // commits the reset -> Game.prestige becomes target
+				grabLucky(sevenCount()); // prestige is now updated; take the freshly-unlocked upgrades
 			},
 			menu: function () {
+				var s = settings.ascendlucky;
 				return row('ascendlucky',
 					'<span style="opacity:.85;">buys Lucky digit/number/payout once your prestige ' +
 					'level has enough 7s (' + sevenCount() + ' now) and you can afford the chips — ' +
-					'<b>no reset</b>, fires once then disarms</span>');
+					'<b>no reset</b>, fires once then disarms</span>' +
+					check('ascendlucky.steer', s.steer, 'steer (auto-ascend onto a 7)')) +
+					(s.steer ? '<div class="listing" style="padding-left:18px;opacity:.85;color:#f55;">' +
+						'⚠ steering performs a real ascension (full reset) when it would land your ' +
+						'prestige on a number with more 7s and unlock an upgrade. One-shot.</div>' : '');
 			},
 		},
 	];
@@ -536,7 +566,9 @@
 		var sp = Game.prestige;
 		Game.prestige = 70707; assert(sevenCount() === 3, 'sevenCount counts all 7s');
 		Game.prestige = 123; assert(sevenCount() === 0, 'sevenCount no 7s');
+		assert(sevensIn(7777) === 4 && sevensIn(70) === 1, 'sevensIn(n) counts arbitrary n');
 		Game.prestige = sp;
+		assert(typeof settings.ascendlucky.steer === 'boolean', 'steer setting present');
 		console.log('[MinMax] selfTest OK');
 		return true;
 	}

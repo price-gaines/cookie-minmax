@@ -8,7 +8,7 @@
 (function () {
 	'use strict';
 
-	var VERSION = '0.10.0';
+	var VERSION = '0.11.0';
 	var MOD_ID = 'IIHKH';
 
 	// ---- settings (persisted via mod save/load) -----------------------------
@@ -29,6 +29,7 @@
 		grimoire: { on: false, spell: 'conjure baked goods' },
 		garden:   { on: false },
 		ascendlucky: { on: false, steer: false },
+		ascendright: { on: false },
 	};
 
 	var UNIT = { none: 1, K: 1e3, M: 1e6, B: 1e9, T: 1e12 };
@@ -275,6 +276,34 @@
 					(s.steer ? '<div class="listing" style="padding-left:18px;opacity:.85;color:#f55;">' +
 						'⚠ steering performs a real ascension (full reset) when it would land your ' +
 						'prestige on a number with more 7s and unlock an upgrade. One-shot.</div>' : '');
+			},
+		},
+
+		{
+			// One-shot achievement grab: "When the cookies ascend just right" fires in
+			// Game.Reset when Math.round(Game.cookies)==1e12. CpS jumps the bank in big
+			// steps so you can never land there naturally — so we set the bank to exactly
+			// 1 trillion the instant before committing the reset (bank zeroes anyway, and
+			// prestige comes from lifetime baked, not current bank, so it's purely the win).
+			id: 'ascendright', label: 'Auto-Ascend @ exactly 1 trillion', interval: 30,
+			req: 'the "ascend just right" achievement (still unearned)',
+			avail: function () {
+				var a = Game.Achievements && Game.Achievements['When the cookies ascend just right'];
+				return !!(a && !a.won); // greys out once earned -> also stops it ever looping
+			},
+			tick: function () {
+				if (Game.OnAscend) return;             // already mid-ascension
+				if (typeof Game.Ascend !== 'function' || typeof Game.Reincarnate !== 'function') return;
+				settings.ascendright.on = false;       // one-shot: disarm BEFORE the (re-entrant) commit
+				Game.Ascend(1);                        // open ascend screen, bypass prompt
+				if (!Game.OnAscend) return;            // couldn't ascend (nothing to reset yet)
+				Game.cookies = 1e12;                   // exact lucky number for Reset's Math.round check
+				Game.Reincarnate(1);                   // commit the reset, bypass confirm -> grants the win
+			},
+			menu: function () {
+				return row('ascendright',
+					'<span style="opacity:.85;">sets bank to exactly 1 trillion, then ascends — ' +
+					'<b>a real reset</b>, fires once then disarms</span>');
 			},
 		},
 	];
@@ -569,6 +598,8 @@
 		assert(sevensIn(7777) === 4 && sevensIn(70) === 1, 'sevensIn(n) counts arbitrary n');
 		Game.prestige = sp;
 		assert(typeof settings.ascendlucky.steer === 'boolean', 'steer setting present');
+		var ar = null; for (var j = 0; j < modules.length; j++) if (modules[j].id === 'ascendright') ar = modules[j];
+		assert(ar && typeof ar.tick === 'function' && typeof ar.avail === 'function', 'ascendright module present');
 		console.log('[MinMax] selfTest OK');
 		return true;
 	}

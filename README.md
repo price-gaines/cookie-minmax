@@ -38,20 +38,23 @@ Cookie Clicker must be loaded, then run **one** of these:
 **Bookmarklet** — make a bookmark with this as the URL, click it while playing:
 
 ```
-javascript:(function(){Game.LoadMod('https://cdn.jsdelivr.net/gh/price-gaines/cookie-minmax@main/src/minmax.js')})();
+javascript:(function(){Game.LoadMod('https://cdn.jsdelivr.net/gh/price-gaines/cookie-minmax@v0.11.0/src/minmax.js')})();
 ```
 
 **Console** — paste into the browser devtools console (F12):
 
 ```js
-Game.LoadMod('https://cdn.jsdelivr.net/gh/price-gaines/cookie-minmax@main/src/minmax.js');
+Game.LoadMod('https://cdn.jsdelivr.net/gh/price-gaines/cookie-minmax@v0.11.0/src/minmax.js');
 ```
+
+**Mod Manager** — add the same `@v0.11.0` URL as a custom mod.
 
 Then open **Options** — the "Cookie MinMax" section is at the bottom. Settings persist in your
 save (the mod stores them via the game's own save string).
 
-> jsDelivr caches `@main` for up to 24h. For a specific build use a commit hash, e.g.
-> `@b402e97/src/minmax.js`.
+> Pin a **version tag** (`@v0.11.0`), not `@main`. Tags are immutable, so jsDelivr caches them
+> permanently with no staleness — whereas `@main` can serve a build up to 24h old and its purge
+> doesn't always propagate across CDN edges. Each release gets a new tag; bump the URL to upgrade.
 
 ## Architecture
 

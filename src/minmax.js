@@ -8,7 +8,7 @@
 (function () {
 	'use strict';
 
-	var VERSION = '0.7.7';
+	var VERSION = '0.8.0';
 	var MOD_ID = 'IIHKH';
 
 	// ---- settings (persisted via mod save/load) -----------------------------
@@ -28,6 +28,7 @@
 		// (free cookies, no backfire). Other spells can backfire — opt in knowingly.
 		grimoire: { on: false, spell: 'conjure baked goods' },
 		garden:   { on: false },
+		ascendlucky: { on: false },
 	};
 
 	var UNIT = { none: 1, K: 1e3, M: 1e6, B: 1e9, T: 1e12 };
@@ -203,6 +204,34 @@
 				Game.Objects['Farm'].minigame.harvestAll(0, 1, 1);
 			},
 			menu: function () { return row('garden', 'Harvest mature plants (keeps immortals)'); },
+		},
+
+		{
+			// One-shot achievement grab: "When the cookies ascend just right" fires in
+			// Game.Reset when Math.round(Game.cookies)==1e12. CpS jumps the bank in big
+			// steps so you can never land there naturally — so we set the bank to exactly
+			// 1 trillion the instant before committing the reset (bank zeroes anyway, and
+			// prestige comes from lifetime baked, not current bank, so it's purely the win).
+			id: 'ascendlucky', label: 'Auto-Ascend @ exactly 1 trillion', interval: 30,
+			req: 'the "ascend just right" achievement (still unearned)',
+			avail: function () {
+				var a = Game.Achievements['When the cookies ascend just right'];
+				return !!(a && !a.won); // greys out once earned -> also stops it ever looping
+			},
+			tick: function () {
+				if (Game.OnAscend) return;             // already mid-ascension
+				if (typeof Game.Ascend !== 'function' || typeof Game.Reincarnate !== 'function') return;
+				settings.ascendlucky.on = false;       // one-shot: disarm BEFORE the (re-entrant) commit
+				Game.Ascend(1);                        // open ascend screen, bypass prompt
+				if (!Game.OnAscend) return;            // couldn't ascend (nothing to reset yet)
+				Game.cookies = 1e12;                   // exact lucky number for Reset's Math.round check
+				Game.Reincarnate(1);                   // commit the reset, bypass confirm -> grants the win
+			},
+			menu: function () {
+				return row('ascendlucky',
+					'<span style="opacity:.85;">sets bank to exactly 1 trillion, then ascends — ' +
+					'<b>a real reset</b>, fires once then disarms</span>');
+			},
 		},
 	];
 
@@ -488,6 +517,8 @@
 		var pr = settings.autobuy.protect; settings.autobuy.protect = false;
 		assert(luckyReserve() === 0, 'protect off -> no reserve'); settings.autobuy.protect = pr;
 		assert(fmtTime(0) === 'now' && fmtTime(45) === '45s' && fmtTime(90).indexOf('1m') === 0, 'fmtTime');
+		var al = null; for (var i = 0; i < modules.length; i++) if (modules[i].id === 'ascendlucky') al = modules[i];
+		assert(al && typeof al.tick === 'function' && typeof al.avail === 'function', 'ascendlucky module present');
 		console.log('[MinMax] selfTest OK');
 		return true;
 	}

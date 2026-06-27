@@ -426,7 +426,7 @@
 	function buildMenu() {
 		var menu = document.getElementById('menu');
 		if (!menu || document.getElementById('minmaxMenu')) return;
-		var html = '<div class="subsection" id="minmaxMenu" style="padding-top:0;margin-top:0;padding-bottom:48px;">' +
+		var html = '<div class="subsection" id="minmaxMenu" style="padding-top:0;margin-top:-16px;padding-bottom:48px;">' +
 			'<div class="title" style="padding-top:0;margin-top:0;">' +
 			'IdlerIHardlyKnowHer v' + VERSION + '</div>' +
 			'<div class="listing"><a class="option' + (settings.master ? '' : ' off') + '" ' +

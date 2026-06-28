@@ -8,7 +8,7 @@
 (function () {
 	'use strict';
 
-	var VERSION = '0.11.4';
+	var VERSION = '0.11.5';
 	var MOD_ID = 'IIHKH';
 
 	// ---- settings (persisted via mod save/load) -----------------------------
@@ -314,7 +314,13 @@
 				arBase = null;
 				Game.Ascend(1);                        // open ascend screen, bypass prompt
 				if (!Game.OnAscend) return;            // couldn't ascend (nothing to reset yet)
-				Game.cookies = 1e12;                   // exact lucky number for Reset's Math.round check
+				// Land on EXACTLY 1 trillion this ascension for both readings the game might
+				// use — the bank (Reset checks Math.round(Game.cookies)==1e12) and baked this
+				// run. CpS overshoots the crossing, so we snap them down to exactly 1e12 the
+				// instant before committing. (Both reset to 0 right after; prestige is from
+				// lifetime baked, so this snap costs nothing.)
+				Game.cookies = 1e12;
+				Game.cookiesEarned = 1e12;
 				Game.Reincarnate(1);                   // commit the reset, bypass confirm -> grants the win
 			},
 			menu: function () {

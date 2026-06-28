@@ -8,7 +8,7 @@
 (function () {
 	'use strict';
 
-	var VERSION = '0.11.1';
+	var VERSION = '0.11.2';
 	var MOD_ID = 'IIHKH';
 
 	// ---- settings (persisted via mod save/load) -----------------------------
@@ -239,6 +239,7 @@
 			// ourselves and only ever grab what a player could legitimately buy.
 			id: 'ascendlucky', label: 'Auto Lucky Upgrades', interval: 60,
 			req: 'an unowned Lucky upgrade',
+			enabled: function (s) { return s.on || s.steer; }, // steer works without the main toggle
 			avail: function () {
 				return LUCKY.some(function (t) {
 					var u = Game.Upgrades[t.name];
@@ -442,7 +443,11 @@
 		frame++;
 		for (var i = 0; i < modules.length; i++) {
 			var m = modules[i];
-			if (!settings[m.id] || !settings[m.id].on) continue;
+			var s = settings[m.id];
+			if (!s) continue;
+			// Most modules gate on .on; a module may expose enabled(s) to run on other
+			// sub-toggles too (ascendlucky runs when on OR steer is set).
+			if (!(m.enabled ? m.enabled(s) : s.on)) continue;
 			if (m.avail && !m.avail()) continue; // prerequisite not unlocked in this save
 			var iv = (typeof m.interval === 'function') ? m.interval() : m.interval; // dynamic (autobuy speed)
 			if (frame % (iv < 1 ? 1 : iv) !== 0) continue;

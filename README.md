@@ -6,7 +6,7 @@ automation. Single hosted file, loaded via `Game.LoadMod`. Inspired by FrozenCoo
 
 Settings live in the game's own **Options** menu, in a "Cookie MinMax" section at the bottom.
 
-## Features (v0.11.2)
+## Features (v0.11.3)
 
 All modules default **off**; flip them on in Options. One `logic`-hook scheduler drives everything
 (no `setInterval`, no simulated DOM clicks). Modules whose prerequisites aren't unlocked in your
@@ -24,7 +24,7 @@ save are greyed out and can't be enabled.
 | **Auto Grimoire** | Casts a chosen spell whenever magic is full. Defaults to Conjure Baked Goods (free cookies, no backfire); other spells selectable for those who know the risks. *(requires Wizard Tower Lvl 1)* |
 | **Auto Garden** | Harvests mature plants (native `harvestAll`), leaving immortals and still-growing tiles — prevents decay-death losses. Leave it off while deliberately cross-breeding. *(requires Farm Lvl 1)* |
 | **Auto Lucky Upgrades** | Grabs the three "Lucky" heavenly upgrades (*Lucky digit / number / payout*) — which unlock when your prestige level's digits contain ≥1 / ≥2 / ≥4 sevens — the moment you're eligible and can afford the heavenly chips. No ascension or reset required (the buy works in normal play; the mod just enforces the 7-count so it only takes what's legitimately available). One-shot: disarms after a grab. An optional **steer** sub-toggle goes further: it watches your *projected* prestige level and auto-ascends (a real, full reset) the moment that level would gain a 7 that newly unlocks an unbought, affordable Lucky upgrade — then grabs it. Off by default; also one-shot. |
-| **Auto-Ascend @ 1 trillion** | Grabs the *"When the cookies ascend just right"* achievement. Waits until you've baked 1 trillion lifetime cookies (your first prestige point — so it never nukes a run for zero prestige), then sets the bank to exactly 1,000,000,000,000 the instant before committing a real ascension (you can't land there naturally — CpS jumps the bank in big steps). One-shot; greys out once the achievement is earned. *(requires the achievement still unearned)* |
+| **Auto-Ascend @ 1 trillion** | Grabs the *"When the cookies ascend just right"* achievement. Waits until you've baked 1 trillion cookies **this ascension** (so it never nukes a fresh run the instant you enable it), then sets the bank to exactly 1,000,000,000,000 the instant before committing a real ascension (you can't land there naturally — CpS jumps the bank in big steps). One-shot; greys out once the achievement is earned. *(requires the achievement still unearned)* |
 | **Ascend Now** *(manual)* | A button at the bottom of the section that triggers the game's own ascension screen, showing projected prestige gain. Never fires automatically — you confirm the reset in-game. |
 
 ### Roadmap
@@ -38,21 +38,21 @@ Cookie Clicker must be loaded, then run **one** of these:
 **Bookmarklet** — make a bookmark with this as the URL, click it while playing:
 
 ```
-javascript:(function(){Game.LoadMod('https://cdn.jsdelivr.net/gh/price-gaines/cookie-minmax@v0.11.2/src/minmax.js')})();
+javascript:(function(){Game.LoadMod('https://cdn.jsdelivr.net/gh/price-gaines/cookie-minmax@v0.11.3/src/minmax.js')})();
 ```
 
 **Console** — paste into the browser devtools console (F12):
 
 ```js
-Game.LoadMod('https://cdn.jsdelivr.net/gh/price-gaines/cookie-minmax@v0.11.2/src/minmax.js');
+Game.LoadMod('https://cdn.jsdelivr.net/gh/price-gaines/cookie-minmax@v0.11.3/src/minmax.js');
 ```
 
-**Mod Manager** — add the same `@v0.11.2` URL as a custom mod.
+**Mod Manager** — add the same `@v0.11.3` URL as a custom mod.
 
 Then open **Options** — the "Cookie MinMax" section is at the bottom. Settings persist in your
 save (the mod stores them via the game's own save string).
 
-> Pin a **version tag** (`@v0.11.2`), not `@main`. Tags are immutable, so jsDelivr caches them
+> Pin a **version tag** (`@v0.11.3`), not `@main`. Tags are immutable, so jsDelivr caches them
 > permanently with no staleness — whereas `@main` can serve a build up to 24h old and its purge
 > doesn't always propagate across CDN edges. Each release gets a new tag; bump the URL to upgrade.
 

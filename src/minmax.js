@@ -8,7 +8,7 @@
 (function () {
 	'use strict';
 
-	var VERSION = '0.11.0';
+	var VERSION = '0.11.1';
 	var MOD_ID = 'IIHKH';
 
 	// ---- settings (persisted via mod save/load) -----------------------------
@@ -294,6 +294,11 @@
 			tick: function () {
 				if (Game.OnAscend) return;             // already mid-ascension
 				if (typeof Game.Ascend !== 'function' || typeof Game.Reincarnate !== 'function') return;
+				// Wait until ascending is actually worth it — projected prestige >= 1, i.e. you've
+				// baked >= 1 trillion lifetime cookies (your first prestige point, which is exactly
+				// the "1 trillion" this module is named for). Without this gate, toggling it on would
+				// instantly nuke a fresh run for zero prestige just to grab the achievement.
+				if (projectedPrestige() < 1) return;
 				settings.ascendright.on = false;       // one-shot: disarm BEFORE the (re-entrant) commit
 				Game.Ascend(1);                        // open ascend screen, bypass prompt
 				if (!Game.OnAscend) return;            // couldn't ascend (nothing to reset yet)
@@ -302,7 +307,8 @@
 			},
 			menu: function () {
 				return row('ascendright',
-					'<span style="opacity:.85;">sets bank to exactly 1 trillion, then ascends — ' +
+					'<span style="opacity:.85;">waits until you\'ve baked 1 trillion lifetime cookies ' +
+					'(your first prestige point), sets the bank to exactly 1 trillion, then ascends — ' +
 					'<b>a real reset</b>, fires once then disarms</span>');
 			},
 		},

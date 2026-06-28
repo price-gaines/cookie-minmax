@@ -8,7 +8,7 @@
 (function () {
 	'use strict';
 
-	var VERSION = '0.11.3';
+	var VERSION = '0.11.4';
 	var MOD_ID = 'IIHKH';
 
 	// ---- settings (persisted via mod save/load) -----------------------------
@@ -68,6 +68,10 @@
 	// Game.fps is 30, so interval 30 ~= once/sec, 150 ~= once/5s.
 
 	var clickAcc = 0; // fractional-click accumulator for sub-fps target rates
+	// ascendright: cookiesEarned observed when we started watching this ascension.
+	// Used to fire ONLY on the upward crossing of 1e12 — never instantly because you
+	// were already past 1T when you enabled it. Transient (recaptured on reload/ascend).
+	var arBase = null;
 
 	var modules = [
 		{
@@ -295,13 +299,19 @@
 			tick: function () {
 				if (Game.OnAscend) return;             // already mid-ascension
 				if (typeof Game.Ascend !== 'function' || typeof Game.Reincarnate !== 'function') return;
-				// Wait until you've baked 1 trillion cookies THIS ascension (Game.cookiesEarned
-				// resets each ascension). cookiesReset already covers prior runs, so a lifetime/
-				// prestige check would pass instantly for anyone who has ascended before — making it
-				// fire the moment you toggle it on. This gates on the current run only, matching the
-				// "@ 1 trillion" name.
-				if ((Game.cookiesEarned || 0) < 1e12) return;
+				// Fire ONLY on the upward crossing of 1 trillion baked THIS ascension.
+				// arBase = cookiesEarned when we started watching; recaptured when a new
+				// ascension resets the counter (earned drops below the baseline). If you
+				// enable this already past 1T, arBase>=1e12 -> it never fires this run and
+				// waits for a fresh ascension to climb through 1T — so it can't ascend the
+				// instant you toggle it on. (cookiesEarned resets each ascension; prestige/
+				// lifetime would falsely pass for anyone who has ascended before.)
+				var earned = Game.cookiesEarned || 0;
+				if (arBase === null || earned < arBase) arBase = earned;
+				if (arBase >= 1e12) return;            // armed too late this run; wait for a fresh ascension
+				if (earned < 1e12) return;             // not there yet
 				settings.ascendright.on = false;       // one-shot: disarm BEFORE the (re-entrant) commit
+				arBase = null;
 				Game.Ascend(1);                        // open ascend screen, bypass prompt
 				if (!Game.OnAscend) return;            // couldn't ascend (nothing to reset yet)
 				Game.cookies = 1e12;                   // exact lucky number for Reset's Math.round check
@@ -309,8 +319,9 @@
 			},
 			menu: function () {
 				return row('ascendright',
-					'<span style="opacity:.85;">waits until you\'ve baked 1 trillion cookies this ' +
-					'ascension, sets the bank to exactly 1 trillion, then ascends — ' +
+					'<span style="opacity:.85;">fires when you cross 1 trillion cookies baked this ' +
+						'ascension (enable on a fresh run; if already past 1T it waits for your next ascension). It ' +
+					'sets the bank to exactly 1 trillion, then ascends — ' +
 					'<b>a real reset</b>, fires once then disarms</span>');
 			},
 		},

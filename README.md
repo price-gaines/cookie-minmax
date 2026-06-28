@@ -6,7 +6,7 @@ automation. Single hosted file, loaded via `Game.LoadMod`. Inspired by FrozenCoo
 
 Settings live in the game's own **Options** menu, in a "Cookie MinMax" section at the bottom.
 
-## Features (v0.11.5)
+## Features (v0.11.6)
 
 All modules default **off**; flip them on in Options. One `logic`-hook scheduler drives everything
 (no `setInterval`, no simulated DOM clicks). Modules whose prerequisites aren't unlocked in your
@@ -38,21 +38,21 @@ Cookie Clicker must be loaded, then run **one** of these:
 **Bookmarklet** — make a bookmark with this as the URL, click it while playing:
 
 ```
-javascript:(function(){Game.LoadMod('https://cdn.jsdelivr.net/gh/price-gaines/cookie-minmax@v0.11.5/src/minmax.js')})();
+javascript:(function(){Game.LoadMod('https://cdn.jsdelivr.net/gh/price-gaines/cookie-minmax@v0.11.6/src/minmax.js')})();
 ```
 
 **Console** — paste into the browser devtools console (F12):
 
 ```js
-Game.LoadMod('https://cdn.jsdelivr.net/gh/price-gaines/cookie-minmax@v0.11.5/src/minmax.js');
+Game.LoadMod('https://cdn.jsdelivr.net/gh/price-gaines/cookie-minmax@v0.11.6/src/minmax.js');
 ```
 
-**Mod Manager** — add the same `@v0.11.5` URL as a custom mod.
+**Mod Manager** — add the same `@v0.11.6` URL as a custom mod.
 
 Then open **Options** — the "Cookie MinMax" section is at the bottom. Settings persist in your
 save (the mod stores them via the game's own save string).
 
-> Pin a **version tag** (`@v0.11.5`), not `@main`. Tags are immutable, so jsDelivr caches them
+> Pin a **version tag** (`@v0.11.6`), not `@main`. Tags are immutable, so jsDelivr caches them
 > permanently with no staleness — whereas `@main` can serve a build up to 24h old and its purge
 > doesn't always propagate across CDN edges. Each release gets a new tag; bump the URL to upgrade.
 

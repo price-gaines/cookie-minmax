@@ -8,7 +8,7 @@
 (function () {
 	'use strict';
 
-	var VERSION = '0.11.5';
+	var VERSION = '0.11.6';
 	var MOD_ID = 'IIHKH';
 
 	// ---- settings (persisted via mod save/load) -----------------------------
@@ -43,6 +43,9 @@
 	];
 	function sevensIn(n) { return ('' + Math.floor(n || 0)).split('7').length - 1; }
 	function sevenCount() { return sevensIn(Game.prestige); }
+	// True once every Lucky upgrade is UNLOCKED (7-count requirement met) — owned or not.
+	// Matches the game's own showIf rule, so it tracks the ascension UI's notion of "shown".
+	function allLuckyUnlocked() { return LUCKY.every(function (t) { return sevenCount() >= t.sevens; }); }
 	// Projected prestige level if you ascended right now (committed + this run's earnings).
 	function projectedPrestige() {
 		if (typeof Game.HowMuchPrestige !== 'function') return Math.floor(Game.prestige || 0);
@@ -252,6 +255,11 @@
 			},
 			tick: function () {
 				if (!Game.Upgrades || typeof Game.heavenlyChips !== 'number') return;
+				// Steering only exists to UNLOCK. Once every Lucky upgrade is unlocked (its
+				// 7-count requirement is met by the current prestige), more ascensions can't
+				// unlock anything — disarm steer. grab below still buys them when you can
+				// afford the chips. (unlocked != owned.)
+				if (settings.ascendlucky.steer && allLuckyUnlocked()) settings.ascendlucky.steer = false;
 				// 1) Non-destructive: grab anything legitimately buyable right now.
 				if (grabLucky(sevenCount())) { settings.ascendlucky.on = false; return; }
 				// 2) Steering (opt-in, destructive): ascend the instant the projected level
@@ -273,12 +281,14 @@
 			},
 			menu: function () {
 				var s = settings.ascendlucky;
+					var done = allLuckyUnlocked();   // all unlocked -> steering has nothing left to do
 				return row('ascendlucky',
 					'<span style="opacity:.85;">buys Lucky digit/number/payout once your prestige ' +
 					'level has enough 7s (' + sevenCount() + ' now) and you can afford the chips — ' +
 					'<b>no reset</b>, fires once then disarms</span>' +
-					check('ascendlucky.steer', s.steer, 'steer (auto-ascend onto a 7)')) +
-					(s.steer ? '<div class="listing" style="padding-left:18px;opacity:.85;color:#f55;">' +
+						(done ? '<span style="opacity:.6;"> — all Lucky upgrades unlocked; steering done</span>'
+							: check('ascendlucky.steer', s.steer, 'steer (auto-ascend onto a 7)'))) +
+						(!done && s.steer ? '<div class="listing" style="padding-left:18px;opacity:.85;color:#f55;">' +
 						'⚠ steering performs a real ascension (full reset) when it would land your ' +
 						'prestige on a number with more 7s and unlock an upgrade. One-shot.</div>' : '');
 			},
@@ -625,6 +635,8 @@
 		Game.prestige = 70707; assert(sevenCount() === 3, 'sevenCount counts all 7s');
 		Game.prestige = 123; assert(sevenCount() === 0, 'sevenCount no 7s');
 		assert(sevensIn(7777) === 4 && sevensIn(70) === 1, 'sevensIn(n) counts arbitrary n');
+		Game.prestige = 7777; assert(allLuckyUnlocked() === true, 'allLuckyUnlocked: 4 sevens -> all');
+		Game.prestige = 777; assert(allLuckyUnlocked() === false, 'allLuckyUnlocked: 3 sevens -> payout still locked');
 		Game.prestige = sp;
 		assert(typeof settings.ascendlucky.steer === 'boolean', 'steer setting present');
 		var ar = null; for (var j = 0; j < modules.length; j++) if (modules[j].id === 'ascendright') ar = modules[j];
